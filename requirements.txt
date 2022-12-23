@@ -1,3 +1,4 @@
+pip==22.3.1
 PyAudio==0.2.12
 requests==2.25.1
 streamlit==1.16.0
