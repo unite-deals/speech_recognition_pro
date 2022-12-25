@@ -2,10 +2,10 @@ import websockets
 import asyncio
 import base64
 import json
-from configure import auth_key
 import pyaudio
 from streamlit_lottie import st_lottie
 import requests
+from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
 import streamlit as st
 
@@ -26,6 +26,14 @@ stream = p.open(
     input=True,
     frames_per_buffer=Frames_per_buffer
 )
+
+webrtc_ctx = webrtc_streamer(
+        key="speech-to-text",
+        mode=WebRtcMode.SENDONLY,
+        audio_receiver_size=1024,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={"video": False, "audio": True},
+    )
 
 def load_lottieurl(url: str):
     r = requests.get(url)
@@ -77,6 +85,7 @@ async def send_receive():
         async def send():
             while st.session_state['run']:
                 try:
+                    audio_frames = webrtc_ctx.audio_receiver.get_frames(timeout=1)
                     data = stream.read(Frames_per_buffer)
                     data = base64.b64encode(data).decode("utf-8")
                     json_data = json.dumps({"audio_data":str(data)})
